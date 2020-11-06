@@ -3,43 +3,44 @@ import java.net.*;
 import java.util.Properties;
 import java.util.Scanner;
 
-public class MyClient {
+public class MyServer {
     public static void main(String[] args) {
         Properties prop = new Properties();
-
         try {
             FileInputStream bacaConfig = new FileInputStream(args[0]);
 
-            // load a property
+            // load a property file
             prop.load(bacaConfig);
-            // mendapatkan property value ip dan port
-            String ip = prop.getProperty("server");
+            // dapatkan port value dan maskan kedalam socket
+            // rubah getProperty String menjadi int
             int port = Integer.parseInt(prop.getProperty("port"));
-
-            Socket s = new Socket(ip, port);
-
+            ServerSocket ss = new ServerSocket(port);
+            Socket s = ss.accept();// establishes connection
+            DataInputStream dis = new DataInputStream(s.getInputStream());
             DataOutputStream dout = new DataOutputStream(s.getOutputStream());
-            DataInputStream doin = new DataInputStream(s.getInputStream());
-
             System.out.println("Selamat datang di aplikasi chattingan ssaya");
             boolean isExit = false;
+            Scanner input = new Scanner(System.in);
+
             while (isExit == false) {
 
                 try {
-                    Scanner input = new Scanner(System.in);
+                    String chatServer = (String) dis.readUTF();
+                    System.out.println("pesan dari client: " + chatServer);
 
                     System.out.println("silahkan isi pesan anda");
                     String pesan = input.nextLine();
                     dout.writeUTF(pesan);
-                    String chatServer = (String) doin.readUTF();
-                    System.out.println("pesan dari server:  " + chatServer);
+
                     dout.flush();
-                    if (chatServer.toUpperCase().equals("EXIT")) {
+                    if (pesan.toUpperCase().equals("EXIT")) {
                         dout.writeUTF("teman chatting anda sudah meninggalkan server");
                         System.out.println("anda telah meninggalkan server");
                         isExit = true;
                         dout.close();
                         s.close();
+                        ss.close();
+                        input.close();
                     } else {
                         isExit = false;
                     }
@@ -52,5 +53,6 @@ public class MyClient {
         } catch (Exception e) {
             System.out.println(e);
         }
+
     }
 }
